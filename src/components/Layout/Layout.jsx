@@ -8,7 +8,7 @@ export const Layout = ({ children }) => {
       <main className="flex-1">
         {children}
       </main>
-      <Footer />
+      <Footer/>
     </div>
   )
 }
