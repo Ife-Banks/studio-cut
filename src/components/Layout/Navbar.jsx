@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { Shield } from 'lucide-react' // Import an icon for admin
 
 const NAV_LINKS = [
   { to: '/', label: 'Home' },
@@ -18,7 +19,7 @@ const NAV_LINKS = [
 ]
 
 export const Navbar = () => {
-  const { user, signOut } = useAuth()
+  const { user, signOut, isAdmin } = useAuth() // Get isAdmin from context
   const location = useLocation()
 
   const getInitials = (email) => email?.charAt(0).toUpperCase() || 'U'
@@ -77,13 +78,34 @@ export const Navbar = () => {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuLabel className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-                    My Account
-                  </DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-48">
+                 <DropdownMenuLabel className="flex items-center justify-between">
+  <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+    My Account
+  </span>
+  {isAdmin && (
+    <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+      Admin
+    </span>
+  )}
+</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  
+                  {/* Show Admin link only for admin users */}
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuItem asChild className="text-amber-600 font-medium">
+                        <Link to="/admin" className="flex items-center gap-2">
+                          <Shield className="h-4 w-4" />
+                          Admin Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard">Dashboard</Link>
+                    <Link to="/dashboard">My Dashboard</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/profile">Profile</Link>

@@ -13,7 +13,9 @@ import {
   FormMessage,
 } from '../../components/ui/form'
 import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../lib/supabase/client'
 import { toast } from 'sonner'
+import { useState } from 'react'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -23,6 +25,7 @@ const loginSchema = z.object({
 export const Login = () => {
   const navigate = useNavigate()
   const { signIn } = useAuth()
+  const [isLoading, setIsLoading] = useState(false)
 
   const form = useForm({
     resolver: zodResolver(loginSchema),
@@ -34,12 +37,40 @@ export const Login = () => {
 
   const onSubmit = async (data) => {
     try {
-      const { error } = await signIn(data.email, data.password)
+      setIsLoading(true)
+      const { data: authData, error } = await signIn(data.email, data.password)
+      
       if (error) throw error
-      toast.success('Logged in successfully')
-      navigate('/')
+      
+      if (authData?.user) {
+        // Fetch the user's profile to get their role
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', authData.user.id)
+          .single()
+        
+        if (profileError) {
+          console.error('Error fetching profile:', profileError)
+          // Still login successful, but redirect to home
+          toast.success('Logged in successfully')
+          navigate('/')
+          return
+        }
+
+        toast.success('Logged in successfully')
+        
+        // Redirect based on role
+        if (profile?.role === 'admin') {
+          navigate('/admin')
+        } else {
+          navigate('/')
+        }
+      }
     } catch (error) {
       toast.error(error.message)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -85,8 +116,12 @@ export const Login = () => {
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? 'Signing in...' : 'Sign In'}
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
         </Form>

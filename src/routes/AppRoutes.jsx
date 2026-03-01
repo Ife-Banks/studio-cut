@@ -6,6 +6,9 @@ import { Login } from '../pages/Auth/Login'
 import { Register } from '../pages/Auth/Register'
 import { AdminDashboard } from '../pages/Dashboard/AdminDashboard'
 import { ProtectedRoute } from './ProtectedRoute'
+import { DebugAuth } from '../pages/DebugAuth'
+import { TestProfile } from '../pages/TestProfile'
+import { SimpleTest } from '../pages/SimpleTest'
 
 export const AppRoutes = () => {
   return (
@@ -15,7 +18,12 @@ export const AppRoutes = () => {
       <Route path="/booking" element={<BookingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/debug" element={<DebugAuth />} />
+      // In AppRoutes.jsx
+<Route path="/test-profile" element={<TestProfile />} />
+<Route path="/simple-test" element={<SimpleTest />} />
       <Route
+      
         path="/admin/*"
         element={
           <ProtectedRoute requiredRole="admin">

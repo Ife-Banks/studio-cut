@@ -13,7 +13,9 @@ import {
   FormMessage,
 } from '../../components/ui/form'
 import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../lib/supabase/client'
 import { toast } from 'sonner'
+import { useState } from 'react'
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -27,6 +29,7 @@ const registerSchema = z.object({
 export const Register = () => {
   const navigate = useNavigate()
   const { signUp } = useAuth()
+  const [isLoading, setIsLoading] = useState(false)
 
   const form = useForm({
     resolver: zodResolver(registerSchema),
@@ -39,12 +42,21 @@ export const Register = () => {
 
   const onSubmit = async (data) => {
     try {
-      const { error } = await signUp(data.email, data.password)
+      setIsLoading(true)
+      const { data: authData, error } = await signUp(data.email, data.password)
+      
       if (error) throw error
+      
       toast.success('Registration successful! Please check your email to verify your account.')
+      
+      // For new registrations, always redirect to login
+      // (they won't be admin automatically)
       navigate('/login')
+      
     } catch (error) {
       toast.error(error.message)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -104,8 +116,12 @@ export const Register = () => {
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? 'Creating account...' : 'Sign Up'}
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating account...' : 'Sign Up'}
             </Button>
           </form>
         </Form>
