@@ -16,9 +16,11 @@ export const useBarbers = (includeInactive = false) => {
           is_active,
           working_hours,
           profile:profiles!profile_id (
-            email,
-            phone
-          )
+  email,
+  phone,
+  first_name,
+  last_name
+)
         `)
         .order('name')
       

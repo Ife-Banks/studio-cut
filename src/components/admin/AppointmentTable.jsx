@@ -49,7 +49,7 @@ export const AppointmentTable = () => {
 
   const filteredAppointments = appointments?.filter(apt => {
     const matchesSearch = 
-      apt.customer?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+      apt.customer?.first_name + ' ' + apt.customer?.last_name?.toLowerCase().includes(search.toLowerCase()) ||
       apt.customer?.email?.toLowerCase().includes(search.toLowerCase())
     
     const matchesStatus = statusFilter === 'all' || apt.status === statusFilter

@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
+import { PasswordInput } from '../../components/ui/password-input'
 import {
   Form,
   FormControl,
@@ -13,11 +14,12 @@ import {
   FormMessage,
 } from '../../components/ui/form'
 import { useAuth } from '../../context/AuthContext'
-import { supabase } from '../../lib/supabase/client'
 import { toast } from 'sonner'
 import { useState } from 'react'
 
 const registerSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().optional(),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string()
@@ -34,6 +36,8 @@ export const Register = () => {
   const form = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      firstName: '',
+      lastName: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -43,15 +47,12 @@ export const Register = () => {
   const onSubmit = async (data) => {
     try {
       setIsLoading(true)
-      const { data: authData, error } = await signUp(data.email, data.password)
+      const { error } = await signUp(data.email, data.password, data.firstName, data.lastName)
       
       if (error) throw error
       
-      toast.success('Registration successful! Please check your email to verify your account.')
-      
-      // For new registrations, always redirect to login
-      // (they won't be admin automatically)
-      navigate('/login')
+      // Redirect to verification pending page with email
+      navigate(`/verification-pending?email=${encodeURIComponent(data.email)}`)
       
     } catch (error) {
       toast.error(error.message)
@@ -73,7 +74,36 @@ export const Register = () => {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="email"
@@ -95,7 +125,7 @@ export const Register = () => {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••" {...field} />
+                    <PasswordInput field={field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -109,7 +139,7 @@ export const Register = () => {
                 <FormItem>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••" {...field} />
+                    <PasswordInput field={field} placeholder="••••••" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

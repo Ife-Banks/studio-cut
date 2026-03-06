@@ -3,6 +3,15 @@ import { useAuth } from '../context/AuthContext'
 import { useProfile } from '../hooks/useProfile'
 import { useEffect, useState } from 'react'
 
+const hasRequiredRole = (profile, requiredRole) => {
+  if (!requiredRole) return true;
+  if (requiredRole === 'admin') return profile?.role === 'admin';
+  if (requiredRole === 'barber') {
+    return profile?.role === 'barber' || profile?.role === 'admin' || profile?.is_barber;
+  }
+  return false;
+};
+
 export const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, loading: authLoading } = useAuth()
   const { data: profile, isLoading: profileLoading, error } = useProfile(user?.id)
@@ -30,11 +39,11 @@ export const ProtectedRoute = ({ children, requiredRole }) => {
       } else if (!requiredRole) {
         console.log('11. No role required -> authorized')
         setIsAuthorized(true)
-      } else if (profile?.role === requiredRole) {
-        console.log(`12. Role match: ${profile.role} === ${requiredRole} -> authorized`)
+      } else if (hasRequiredRole(profile, requiredRole)) {
+        console.log(`12. Role check passed for ${requiredRole}`)
         setIsAuthorized(true)
       } else {
-        console.log(`13. Role mismatch: profile role = ${profile?.role}, required = ${requiredRole} -> not authorized`)
+        console.log(`13. Role check failed for ${requiredRole}`)
         setIsAuthorized(false)
       }
       setChecking(false)
@@ -55,8 +64,9 @@ export const ProtectedRoute = ({ children, requiredRole }) => {
     return <Navigate to="/login" replace />
   }
 
-  if (requiredRole && profile?.role !== requiredRole) {
-    console.log('15. Redirecting to home - wrong role')
+  // Final check after loading
+  if (requiredRole && !hasRequiredRole(profile, requiredRole)) {
+    console.log('15. Redirecting to home - insufficient role')
     return <Navigate to="/" replace />
   }
 

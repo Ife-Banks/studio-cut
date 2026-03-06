@@ -7,6 +7,9 @@ import { ServiceManager } from '../../components/admin/ServiceManager'
 import { BarberManager } from '../../components/admin/BarberManager'
 import { useAppointments } from '../../hooks/useAppointments'
 import { format, startOfDay, endOfDay } from 'date-fns'
+import { InviteStaffForm } from '../../components/admin/InviteStaffForm'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '../../lib/supabase/client'
 
 export const AdminDashboard = () => {
   const location = useLocation()
@@ -19,6 +22,17 @@ export const AdminDashboard = () => {
     endDate: endOfDay(today).toISOString()
   })
 
+  const { data: activeBarbers } = useQuery({
+  queryKey: ['barbers', { active: true }],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from('barbers')
+      .select('id')
+      .eq('is_active', true)
+    if (error) throw error
+    return data
+  }
+})
   // Calculate today's revenue
   const todayRevenue = todayAppointments?.reduce((sum, apt) => {
     return apt.payment_status === 'paid' ? sum + (apt.services?.price || 0) : sum
@@ -68,7 +82,7 @@ export const AdminDashboard = () => {
               <CardTitle className="text-sm font-medium text-gray-500">Active Barbers</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">3</div>
+              <div className="text-3xl font-bold">{activeBarbers?.length || 0}</div>
               <p className="text-xs text-gray-500 mt-1">
                 Currently working
               </p>
@@ -78,10 +92,11 @@ export const AdminDashboard = () => {
 
         {/* Tab Navigation */}
         <Tabs value={currentTab} onValueChange={(value) => window.location.hash = value}>
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="appointments">Appointments</TabsTrigger>
             <TabsTrigger value="services">Services</TabsTrigger>
             <TabsTrigger value="barbers">Barbers</TabsTrigger>
+            <TabsTrigger value="staff">Staff</TabsTrigger>
           </TabsList>
           
           <TabsContent value="appointments">
@@ -95,6 +110,9 @@ export const AdminDashboard = () => {
           <TabsContent value="barbers">
             <BarberManager />
           </TabsContent>
+          <TabsContent value="staff">
+  <InviteStaffForm onSuccess={() => {}} />
+</TabsContent>
         </Tabs>
       </div>
     </div>

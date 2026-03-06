@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
-import { Shield } from 'lucide-react' // Import an icon for admin
+import { Shield, Scissors, LayoutDashboard } from 'lucide-react'
 
 const NAV_LINKS = [
   { to: '/', label: 'Home' },
@@ -19,10 +19,20 @@ const NAV_LINKS = [
 ]
 
 export const Navbar = () => {
-  const { user, signOut, isAdmin } = useAuth() // Get isAdmin from context
+  const { user, profile, signOut, isAdmin, canAccessBarberDashboard, fullName } = useAuth()
   const location = useLocation()
 
-  const getInitials = (email) => email?.charAt(0).toUpperCase() || 'U'
+  const getInitials = () => {
+    if (profile?.first_name) {
+      return profile.first_name.charAt(0).toUpperCase()
+    }
+    return user?.email?.charAt(0).toUpperCase() || 'U'
+  }
+
+  const getDisplayName = () => {
+    if (fullName) return fullName
+    return user?.email?.split('@')[0] || 'User'
+  }
 
   const isActive = (path) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
@@ -73,43 +83,59 @@ export const Navbar = () => {
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user.user_metadata?.avatar_url} />
                       <AvatarFallback className="bg-primary-foreground text-primary text-xs font-semibold">
-                        {getInitials(user.email)}
+                        {getInitials()}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                 <DropdownMenuLabel className="flex items-center justify-between">
-  <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-    My Account
-  </span>
-  {isAdmin && (
-    <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-      Admin
-    </span>
-  )}
-</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="flex items-center justify-between">
+                    <span className="truncate">{getDisplayName()}</span>
+                    {isAdmin && (
+                      <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                        Admin
+                      </span>
+                    )}
+                    {!isAdmin && profile?.is_barber && (
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                        Barber
+                      </span>
+                    )}
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   
-                  {/* Show Admin link only for admin users */}
+                  {/* Admin Dashboard - for admins only */}
                   {isAdmin && (
-                    <>
-                      <DropdownMenuItem asChild className="text-amber-600 font-medium">
-                        <Link to="/admin" className="flex items-center gap-2">
-                          <Shield className="h-4 w-4" />
-                          Admin Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                    </>
+                    <DropdownMenuItem asChild className="text-amber-600 font-medium">
+                      <Link to="/admin" className="flex items-center gap-2">
+                        <Shield className="h-4 w-4" />
+                        Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
                   )}
                   
+                  {/* Barber Dashboard - for barbers and admins */}
+                  {canAccessBarberDashboard && !isAdmin && (
+                    <DropdownMenuItem asChild className="text-blue-600 font-medium">
+                      <Link to="/barber-dashboard" className="flex items-center gap-2">
+                        <Scissors className="h-4 w-4" />
+                        Barber Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  
+                  {/* Customer Dashboard - for everyone */}
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard">My Dashboard</Link>
+                    <Link to="/dashboard" className="flex items-center gap-2">
+                      <LayoutDashboard className="h-4 w-4" />
+                      My Dashboard
+                    </Link>
                   </DropdownMenuItem>
+                  
                   <DropdownMenuItem asChild>
-                    <Link to="/profile">Profile</Link>
+                    <Link to="/profile">Profile Settings</Link>
                   </DropdownMenuItem>
+                  
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={signOut}

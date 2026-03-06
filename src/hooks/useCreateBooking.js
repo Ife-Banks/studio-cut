@@ -30,7 +30,7 @@ export const useCreateBooking = () => {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          full_name: customer.name,
+          first_name: customer.name,
           phone: customer.phone,
         })
         .eq('id', user.id)

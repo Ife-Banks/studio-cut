@@ -9,7 +9,7 @@ export const useAppointments = (filters = {}) => {
         .from('appointments')
         .select(`
           *,
-          customer:profiles!customer_id(full_name, email, phone),
+          customer:profiles!customer_id(first_name, last_name, email, phone),
           barber:barbers(name),
           service:services(name, price, duration)
         `)

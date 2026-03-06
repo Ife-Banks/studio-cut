@@ -92,12 +92,13 @@ export const BarberManager = () => {
         .from('barbers')
         .select(`
           *,
-          profile:profiles!profile_id (
-            id,
-            email,
-            phone,
-            full_name
-          )
+         profile:profiles!profile_id (
+  id,
+  email,
+  phone,
+  first_name,
+  last_name
+)
         `)
         .order('name')
       
@@ -112,7 +113,7 @@ export const BarberManager = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email, role')
+        .select('id, first_name, last_name, email, role')
         .eq('role', 'customer') // Only show customers to link as barbers
       
       if (error) throw error

@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
+import { PasswordInput } from '../../components/ui/password-input'
 import {
   Form,
   FormControl,
@@ -40,7 +41,14 @@ export const Login = () => {
       setIsLoading(true)
       const { data: authData, error } = await signIn(data.email, data.password)
       
-      if (error) throw error
+      if (error) {
+        if (error.message.includes('Email not confirmed')) {
+          // Redirect to verification pending page
+          navigate(`/verification-pending?email=${encodeURIComponent(data.email)}`)
+          return
+        }
+        throw error
+      }
       
       if (authData?.user) {
         // Fetch the user's profile to get their role
@@ -52,7 +60,6 @@ export const Login = () => {
         
         if (profileError) {
           console.error('Error fetching profile:', profileError)
-          // Still login successful, but redirect to home
           toast.success('Logged in successfully')
           navigate('/')
           return
@@ -109,7 +116,7 @@ export const Login = () => {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••" {...field} />
+                    <PasswordInput field={field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
